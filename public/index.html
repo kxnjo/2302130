@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Secure Search</title>
+</head>
+<body>
+  <h1>Search Page</h1>
+  <form method="POST" action="/search">
+    <input type="text" name="term" required placeholder="Enter search term" />
+    <button type="submit">Search</button>
+  </form>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("error")) {
+      alert("Invalid input detected (XSS or SQL Injection blocked)");
+    }
+  </script>
+</body>
+</html>
