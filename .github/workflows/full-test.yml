@@ -1,0 +1,65 @@
+name: Full Security and UI Test Workflow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "SecureSearchApp"
+          path: "."
+          format: "HTML"
+          out: "dependency-check-report"
+
+      - name: Upload Dependency Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: dependency-check-report
+
+  ui-integration-tests:
+    name: UI + Integration Testing
+    runs-on: ubuntu-latest
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+        ports:
+          - 4444:4444
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Web Application
+        run: docker-compose up -d
+
+      - name: Wait for App to be ready
+        run: |
+          echo "Waiting for server..."
+          sleep 10
+
+      - name: Run Selenium Tests
+        run: node tests/SeleniumTest.mjs github
+
+      - name: Shutdown Docker
+        if: always()
+        run: docker-compose down
